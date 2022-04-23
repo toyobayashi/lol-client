@@ -82,6 +82,7 @@ class Client extends EventEmitter {
     this.args = undefined
     this.riot = undefined
     this.app = undefined
+    this.ws = undefined
     this.name = (options && options.name) || defaultUxName
     this.interval = (options && options.interval) || 1000
     this.ca = (options && options.ca) || undefined
@@ -146,6 +147,7 @@ class Client extends EventEmitter {
         this.args = undefined
         this.riot = undefined
         this.app = undefined
+        this.ws = undefined
         this.emit('disconnect')
         this._tick()
       }

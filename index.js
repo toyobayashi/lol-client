@@ -1,12 +1,16 @@
 const got = require('got').default
 const Agent = require('https').Agent
-const { execFileSync } = require('child_process')
+// const { execFileSync } = require('child_process')
 const { EventEmitter } = require('events')
 const WebSocket = require('ws')
+const {
+  getProcessCommandLine,
+  isProcessRunning
+} = require('./dist/process.node')
 
 const defaultUxName = 'LeagueClientUx.exe'
 
-class ClientNotFoundError extends Error {
+/* class ClientNotFoundError extends Error {
   constructor (message) {
     super(message)
   }
@@ -14,15 +18,16 @@ class ClientNotFoundError extends Error {
 Object.defineProperty(ClientNotFoundError.prototype, 'name', {
   configurable: true,
   value: 'ClientNotFoundError'
-})
+}) */
 
 function getLeagueClientArgs (name = defaultUxName) {
-  const stdoutString = execFileSync('WMIC.exe', ['PROCESS', 'WHERE', `name='${name}'`, 'GET', 'CommandLine'], {
-    stdio: ['pipe', 'pipe', 'ignore']
-  }).toString()
-  if (!stdoutString.includes('CommandLine')) {
-    throw new ClientNotFoundError(`process named '${name}' is not found`)
-  }
+  // const stdoutString = execFileSync('WMIC.exe', ['PROCESS', 'WHERE', `name='${name}'`, 'GET', 'CommandLine'], {
+  //   stdio: ['pipe', 'pipe', 'ignore']
+  // }).toString()
+  // if (!stdoutString.includes('CommandLine')) {
+  //   throw new ClientNotFoundError(`process named '${name}' is not found`)
+  // }
+  const stdoutString = getProcessCommandLine(name)
   return {
     appName: stdoutString.match(/--app-name=([\w\d_-]+)/)[1],
     appPort: Number(stdoutString.match(/--app-port=([0-9]+)/)[1]),
@@ -49,11 +54,12 @@ function pollLeagueClientUx (name, interval) {
 }
 
 function isRunning (pid) {
-  try {
-    return process.kill(pid, 0)
-  } catch (err) {
-    return err.code === 'EPERM'
-  }
+  // try {
+  //   return process.kill(pid, 0)
+  // } catch (err) {
+  //   return err.code === 'EPERM'
+  // }
+  return isProcessRunning(pid)
 }
 
 class LeagueWebSocket extends WebSocket {

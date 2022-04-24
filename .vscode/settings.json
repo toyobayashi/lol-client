@@ -1,0 +1,14 @@
+{
+  "files.associations": {
+    "*.cjson": "jsonc",
+    "node_api.h": "c",
+    "js_native_api.h": "c",
+    "winver.h": "c",
+    "addon.h": "c",
+    "js_native_api_types.h": "c",
+    "strsafe.h": "c",
+    "psapi.h": "c",
+    "winternl.h": "c",
+    "tlhelp32.h": "c"
+  }
+}

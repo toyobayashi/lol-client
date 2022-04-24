@@ -1,4 +1,10 @@
 const { Client } = require('./index.js')
+const http2wrapper = require('http2-wrapper')
+
+const http2options = {
+  http2: true,
+  request: http2wrapper.auto
+}
 
 const client = new Client()
 client.on('connect', async () => {
@@ -12,9 +18,7 @@ client.on('connect', async () => {
     client.ws.on('/lol-gameflow/v1/gameflow-phase', (msg) => {
       if (msg.data === 'ReadyCheck') {
         console.log('ReadyCheck')
-        client.app.post('lol-matchmaking/v1/ready-check/accept', {
-          http2: true
-        }).json().then((res) => {
+        client.app.post('lol-matchmaking/v1/ready-check/accept', http2options).json().then((res) => {
           console.log(res)
         })
       }

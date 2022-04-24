@@ -66,7 +66,7 @@ class LeagueWebSocket extends WebSocket {
   constructor (address, options) {
     super(address, options)
 
-    this.on('open', () => {
+    this.once('open', () => {
       this.send(JSON.stringify([5, 'OnJsonApiEvent']))
     })
 
@@ -77,7 +77,7 @@ class LeagueWebSocket extends WebSocket {
         console.log(res)
 
         this.emit(res.uri, res)
-      } catch {}
+      } catch (_) {}
     })
   }
 }
@@ -88,7 +88,7 @@ class Client extends EventEmitter {
     this.args = undefined
     this.riot = undefined
     this.app = undefined
-    this.ws = undefined
+    this._ws = undefined
     this.name = (options && options.name) || defaultUxName
     this.interval = (options && options.interval) || 1000
     this.ca = (options && options.ca) || undefined
@@ -98,6 +98,38 @@ class Client extends EventEmitter {
 
   get ok () {
     return this.args !== undefined
+  }
+
+  get ws () {
+    return this._ws
+  }
+
+  tryConnectWebSocket () {
+    return new Promise((resolve, reject) => {
+      if (this._ws) {
+        return resolve(this._ws)
+      }
+      if (this.args === undefined) {
+        return reject(new Error('Client is not connected'))
+      }
+      const ws = new LeagueWebSocket(`wss://riot:${this.args.remotingAuthToken}@127.0.0.1:${this.args.appPort}`, {
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
+        },
+        agent: this._getAgent()
+      })
+      ws.once('open', () => {
+        if (this._ws) {
+          try {
+            this._ws.close()
+          } catch (_) {}
+        }
+        this._ws = ws
+        resolve(ws)
+      })
+
+      ws.once('error', reject)
+    })
   }
 
   _getAgent () {
@@ -130,12 +162,6 @@ class Client extends EventEmitter {
       },
       agent: { https: this._getAgent() }
     })
-    this.ws = new LeagueWebSocket(`wss://riot:${this.args.remotingAuthToken}@127.0.0.1:${this.args.appPort}`, {
-      headers: {
-        Authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
-      },
-      agent: this._getAgent()
-    })
 
     this.emit('connect')
     setTimeout(() => {
@@ -153,7 +179,10 @@ class Client extends EventEmitter {
         this.args = undefined
         this.riot = undefined
         this.app = undefined
-        this.ws = undefined
+        try {
+          this._ws.close()
+        } catch (_) {}
+        this._ws = undefined
         this.emit('disconnect')
         this._tick()
       }

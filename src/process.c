@@ -27,12 +27,16 @@ const char* prc_err(prc_result code) {
 
 #ifdef _WIN32
 
+uint32_t prc_get_sys_err() {
+  return GetLastError();
+}
+
 void prc_free_sys_err_msg(uint16_t* msg) {
   LocalFree(msg);
 }
 
 prc_result prc_get_sys_err_msg(uint16_t** msg) {
-  DWORD code = GetLastError();
+  DWORD code = prc_get_sys_err();
   if (FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM |
                      FORMAT_MESSAGE_IGNORE_INSERTS |
                      FORMAT_MESSAGE_ALLOCATE_BUFFER,
@@ -182,7 +186,7 @@ prc_result prc_get_process_command_line(void* process,
       ntdll, "NtQueryInformationProcess");
 
   if (NtQueryInformationProcess == NULL) {
-    DWORD err = GetLastError();
+    DWORD err = prc_get_sys_err();
     FreeLibrary(ntdll);
     SetLastError(err);
     return prc_system_error;

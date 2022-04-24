@@ -38,26 +38,30 @@
                                              js_##fn));     \
   } while (0)
 
-#define PRC_THROW(env, prc_r)                                             \
-  do {                                                                    \
-    if ((prc_r) == prc_system_error) {                                    \
-      char16_t* msg = NULL;                                               \
-      prc_get_sys_err_msg(&msg);                                          \
-      napi_value js_msg;                                                  \
-      napi_status s = napi_create_string_utf16(                           \
-        (env), msg, NAPI_AUTO_LENGTH, &js_msg);                           \
-      prc_free_sys_err_msg(msg);                                          \
-      if (s != napi_ok) {                                                 \
-        napi_throw_error((env), NULL, "napi_create_string_utf16 failed"); \
-        return NULL;                                                      \
-      }                                                                   \
-      napi_value error;                                                   \
-      NAPI_CALL((env), napi_create_error((env), NULL, js_msg, &error));   \
-      NAPI_CALL((env), napi_throw((env), error));                         \
-      return NULL;                                                        \
-    }                                                                     \
-    NAPI_CALL((env), napi_throw_error((env), NULL, prc_err(prc_r)));      \
-    return NULL;                                                          \
+#define PRC_THROW(env, prc_r)                                                \
+  do {                                                                       \
+    if ((prc_r) == prc_system_error) {                                       \
+      char16_t* msg = NULL;                                                  \
+      uint32_t errcode = prc_get_sys_err();                                  \
+      prc_get_sys_err_msg(&msg);                                             \
+      napi_value js_msg;                                                     \
+      napi_status s = napi_create_string_utf16(                              \
+        (env), msg, NAPI_AUTO_LENGTH, &js_msg);                              \
+      prc_free_sys_err_msg(msg);                                             \
+      if (s != napi_ok) {                                                    \
+        napi_throw_error((env), NULL, "napi_create_string_utf16 failed");    \
+        return NULL;                                                         \
+      }                                                                      \
+      napi_value error;                                                      \
+      napi_value code;                                                       \
+      NAPI_CALL((env), napi_create_uint32((env), errcode, &code));           \
+      NAPI_CALL((env), napi_create_error((env), NULL, js_msg, &error));      \
+      NAPI_CALL((env), napi_set_named_property((env), error, "code", code)); \
+      NAPI_CALL((env), napi_throw((env), error));                            \
+      return NULL;                                                           \
+    }                                                                        \
+    NAPI_CALL((env), napi_throw_error((env), NULL, prc_err(prc_r)));         \
+    return NULL;                                                             \
   } while (0)
 
 static

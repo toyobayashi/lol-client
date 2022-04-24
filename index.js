@@ -1,5 +1,6 @@
 const got = require('got').default
 const Agent = require('https').Agent
+// const Http2Agent = require('http2-wrapper').Agent
 // const { execFileSync } = require('child_process')
 const { EventEmitter } = require('events')
 const WebSocket = require('ws')
@@ -45,7 +46,11 @@ function pollLeagueClientUx (name, interval) {
   return new Promise(function executor (resolve, reject) {
     try {
       args = getLeagueClientArgs(name)
-    } catch (_) {
+    } catch (err) {
+      if (err.code === 5) {
+        // permission denied
+        throw err
+      }
       setTimeout(executor, interval, resolve, reject)
       return
     }
@@ -74,7 +79,9 @@ class LeagueWebSocket extends WebSocket {
       try {
         const json = JSON.parse(content)
         const res = json[2]
-        console.log(res)
+        // if (!res.uri.startsWith('/gcloud-voice-chat') && !res.uri.startsWith('/lol-premade-voice')) {
+        //   console.log(res.uri)
+        // }
 
         this.emit(res.uri, res)
       } catch (_) {}
@@ -151,7 +158,11 @@ class Client extends EventEmitter {
         'Content-Type': 'application/json',
         Authorization: 'Basic ' + Buffer.from(`riot:${this.args.riotClientAuthToken}`).toString('base64')
       },
-      agent: { https: this._getAgent() }
+      https: this.ca ? {
+        certificateAuthority: this.ca
+      } : {
+        rejectUnauthorized: false
+      }
     })
     this.app = got.extend({
       prefixUrl: `https://127.0.0.1:${this.args.appPort}`,
@@ -160,7 +171,11 @@ class Client extends EventEmitter {
         'Content-Type': 'application/json',
         Authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
       },
-      agent: { https: this._getAgent() }
+      https: this.ca ? {
+        certificateAuthority: this.ca
+      } : {
+        rejectUnauthorized: false
+      }
     })
 
     this.emit('connect')

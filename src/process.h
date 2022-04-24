@@ -36,6 +36,7 @@ typedef enum prc_result {
 
 _PRC_EXPORT const char* prc_err(prc_result code);
 _PRC_EXPORT void prc_free_sys_err_msg(uint16_t* msg);
+_PRC_EXPORT uint32_t prc_get_sys_err();
 _PRC_EXPORT prc_result prc_get_sys_err_msg(uint16_t** msg);
 _PRC_EXPORT prc_result prc_is_process_running(uint32_t pid, bool* out);
 _PRC_EXPORT prc_result

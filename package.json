@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "got": "^11.8.3",
+    "http2-wrapper": "^2.1.11",
     "ws": "^8.5.0"
   },
   "os": [

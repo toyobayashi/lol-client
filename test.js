@@ -7,7 +7,7 @@ const os = require('os')
 
 const http2options = {
   http2: true,
-  // request: http2wrapper.auto
+  request: http2wrapper.auto
 }
 
 const logPath = path.join(__dirname, 'lol.log')

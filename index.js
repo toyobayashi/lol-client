@@ -8,6 +8,7 @@ const {
   getProcessCommandLine,
   isProcessRunning
 } = require('./dist/process.node')
+const { Http2Client } = require('./http2.js')
 
 const defaultUxName = 'LeagueClientUx.exe'
 
@@ -95,6 +96,7 @@ class Client extends EventEmitter {
     this.args = undefined
     this.riot = undefined
     this.app = undefined
+    this.app2 = undefined
     this._ws = undefined
     this.name = (options && options.name) || defaultUxName
     this.interval = (options && options.interval) || 1000
@@ -121,7 +123,7 @@ class Client extends EventEmitter {
       }
       const ws = new LeagueWebSocket(`wss://riot:${this.args.remotingAuthToken}@127.0.0.1:${this.args.appPort}`, {
         headers: {
-          Authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
+          authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
         },
         agent: this._getAgent()
       })
@@ -154,8 +156,8 @@ class Client extends EventEmitter {
     this.riot = got.extend({
       prefixUrl: `https://127.0.0.1:${this.args.riotClientAppPort}`,
       headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+        accept: 'application/json',
+        'content-type': 'application/json',
         Authorization: 'Basic ' + Buffer.from(`riot:${this.args.riotClientAuthToken}`).toString('base64')
       },
       https: this.ca ? {
@@ -167,8 +169,8 @@ class Client extends EventEmitter {
     this.app = got.extend({
       prefixUrl: `https://127.0.0.1:${this.args.appPort}`,
       headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+        accept: 'application/json',
+        'content-type': 'application/json',
         Authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
       },
       https: this.ca ? {
@@ -176,6 +178,15 @@ class Client extends EventEmitter {
       } : {
         rejectUnauthorized: false
       }
+    })
+    this.app2 = new Http2Client({
+      prefixUrl: `https://127.0.0.1:${this.args.appPort}`,
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
+      },
+      ca: this.ca
     })
 
     this.emit('connect')
@@ -194,6 +205,7 @@ class Client extends EventEmitter {
         this.args = undefined
         this.riot = undefined
         this.app = undefined
+        this.app2 = undefined
         try {
           this._ws.close()
         } catch (_) {}

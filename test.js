@@ -1,14 +1,8 @@
 const { Client } = require('./index.js')
-const http2wrapper = require('http2-wrapper')
 const util = require('util')
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
-
-const http2options = {
-  http2: true,
-  request: http2wrapper.auto
-}
 
 const logPath = path.join(__dirname, 'lol.log')
 
@@ -27,7 +21,7 @@ function getOwnedChampionsMinimal (client) {
 }
 
 function acceptMatch (client) {
-  return client.app.post('lol-matchmaking/v1/ready-check/accept', http2options)
+  return client.app2.post('lol-matchmaking/v1/ready-check/accept')
 }
 
 function pickChampion (client, actionId, championId) {
@@ -60,7 +54,9 @@ function banChampion (client, actionId, championId) {
   })
 }
 
-const client = new Client()
+const client = new Client({
+  ca: fs.readFileSync(path.join(__dirname, 'riotgames.pem'), 'utf8')
+})
 client.on('connect', async () => {
   log('connect')
   log(client.args)

@@ -1,10 +1,9 @@
-const { Client } = require('./index.js')
-const util = require('util')
-const path = require('path')
-const fs = require('fs')
-const os = require('os')
+import { Client } from './index.js'
+import * as util from 'node:util'
+import * as fs from 'node:fs'
+import * as os from 'node:os'
 
-const logPath = path.join(__dirname, 'lol.log')
+const logPath = new URL('./lol.log', import.meta.url)
 
 function log (...args) {
   const str = util.format(...args) + os.EOL
@@ -21,7 +20,9 @@ function getOwnedChampionsMinimal (client) {
 }
 
 function acceptMatch (client) {
-  return client.app2.post('lol-matchmaking/v1/ready-check/accept')
+  return client.app.post('lol-matchmaking/v1/ready-check/accept', {
+    http2: true
+  })
 }
 
 function pickChampion (client, actionId, championId) {
@@ -55,7 +56,7 @@ function banChampion (client, actionId, championId) {
 }
 
 const client = new Client({
-  ca: fs.readFileSync(path.join(__dirname, 'riotgames.pem'), 'utf8')
+  ca: fs.readFileSync(new URL('./riotgames.pem', import.meta.url), 'utf8')
 })
 client.on('connect', async () => {
   log('connect')
@@ -77,19 +78,26 @@ client.on('connect', async () => {
       for (const actions of msg.data.actions) {
         for (const action of actions) {
           if (action.actorCellId === msg.data.localPlayerCellId && action.isInProgress) {
+            log(action.type)
             if (action.type === 'pick') {
-              log('pick')
-              pickChampion(client, action.id, 55) // 卡特
+              // 卡特
+              pickChampion(client, action.id, 55).catch(err => {
+                console.error(err)
+              })
               return
             }
             if (action.type === 'vote') {
-              log('vote')
-              voteChampion(client, action.id, 55) // 卡特
+              // 卡特
+              voteChampion(client, action.id, 55).catch(err => {
+                console.error(err)
+              })
               return
             }
             if (action.type === 'ban') {
-              log('ban')
-              banChampion(client, action.id, 35) // 小丑
+              // 小丑
+              banChampion(client, action.id, 35).catch(err => {
+                console.error(err)
+              })
               return
             }
           }

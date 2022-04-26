@@ -1,14 +1,17 @@
-const got = require('got').default
-const Agent = require('https').Agent
-// const Http2Agent = require('http2-wrapper').Agent
-// const { execFileSync } = require('child_process')
-const { EventEmitter } = require('events')
-const WebSocket = require('ws')
+import got from 'got'
+import { Agent } from 'node:https'
+
+// import { execFileSync } from 'child_process'
+import { EventEmitter } from 'node:events'
+import WebSocket from 'ws'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+
 const {
   getProcessCommandLine,
   isProcessRunning
 } = require('./dist/process.node')
-const { Http2Client } = require('./http2.js')
 
 const defaultUxName = 'LeagueClientUx.exe'
 
@@ -96,7 +99,6 @@ class Client extends EventEmitter {
     this.args = undefined
     this.riot = undefined
     this.app = undefined
-    this.app2 = undefined
     this._ws = undefined
     this.name = (options && options.name) || defaultUxName
     this.interval = (options && options.interval) || 1000
@@ -179,15 +181,6 @@ class Client extends EventEmitter {
         rejectUnauthorized: false
       }
     })
-    this.app2 = new Http2Client({
-      prefixUrl: `https://127.0.0.1:${this.args.appPort}`,
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
-      },
-      ca: this.ca
-    })
 
     this.emit('connect')
     setTimeout(() => {
@@ -205,7 +198,6 @@ class Client extends EventEmitter {
         this.args = undefined
         this.riot = undefined
         this.app = undefined
-        this.app2 = undefined
         try {
           this._ws.close()
         } catch (_) {}
@@ -219,4 +211,4 @@ class Client extends EventEmitter {
   }
 }
 
-exports.Client = Client
+export { Client }

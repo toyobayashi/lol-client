@@ -11,7 +11,7 @@
       "type": "node",
       "request": "launch",
       "name": "Debug",
-      "program": "${workspaceFolder}/mod.js",
+      "program": "${workspaceFolder}/test.js",
       "args": []
     }
   ]

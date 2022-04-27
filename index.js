@@ -103,6 +103,7 @@ class Client extends EventEmitter {
     this.name = (options && options.name) || defaultUxName
     this.interval = (options && options.interval) || 1000
     this.ca = (options && options.ca) || undefined
+    this.connected = false
 
     this._waitLaunch()
   }
@@ -182,6 +183,7 @@ class Client extends EventEmitter {
       }
     })
 
+    this.connected = true
     this.emit('connect')
     setTimeout(() => {
       this._tick()
@@ -202,6 +204,7 @@ class Client extends EventEmitter {
           this._ws.close()
         } catch (_) {}
         this._ws = undefined
+        this.connected = false
         this.emit('disconnect')
         this._tick()
       }

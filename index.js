@@ -161,7 +161,7 @@ class Client extends EventEmitter {
       headers: {
         accept: 'application/json',
         'content-type': 'application/json',
-        Authorization: 'Basic ' + Buffer.from(`riot:${this.args.riotClientAuthToken}`).toString('base64')
+        authorization: 'Basic ' + Buffer.from(`riot:${this.args.riotClientAuthToken}`).toString('base64')
       },
       https: this.ca ? {
         certificateAuthority: this.ca
@@ -174,7 +174,7 @@ class Client extends EventEmitter {
       headers: {
         accept: 'application/json',
         'content-type': 'application/json',
-        Authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
+        authorization: 'Basic ' + Buffer.from(`riot:${this.args.remotingAuthToken}`).toString('base64')
       },
       https: this.ca ? {
         certificateAuthority: this.ca

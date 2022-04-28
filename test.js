@@ -15,7 +15,7 @@ class LeagueClient extends Client {
   constructor (options) {
     super(options)
 
-    this.currentSummoner = undefined
+    // this.currentSummoner = undefined
     this.champions = new Map()
 
     this.on('connect', this.onConnect.bind(this))
@@ -35,11 +35,11 @@ class LeagueClient extends Client {
     log('ws connected')
     this.ws.on('/lol-gameflow/v1/gameflow-phase', this.onGameFlowPhase.bind(this))
     this.ws.on('/lol-champ-select/v1/session', this.onChampSelect.bind(this))
-    this.currentSummoner = await this.getCurrentSummoner()
+    // this.currentSummoner = await this.getCurrentSummoner()
   }
 
   onDisconnect () {
-    this.currentSummoner = undefined
+    // this.currentSummoner = undefined
     this.champions.clear()
     log('disconnect')
   }

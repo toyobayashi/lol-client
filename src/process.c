@@ -72,6 +72,7 @@ prc_result prc_is_process_running(uint32_t pid, bool* out) {
       }
     }
   }
+  CloseHandle(snap);
   *out = false;
   return prc_ok;
 }

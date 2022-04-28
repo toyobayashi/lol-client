@@ -11,6 +11,14 @@ function log (...args) {
   console.log(...args)
 }
 
+function delay (ms) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve()
+    }, ms)
+  })
+}
+
 class LeagueClient extends Client {
   constructor (options) {
     super(options)
@@ -41,15 +49,69 @@ class LeagueClient extends Client {
     log('disconnect')
   }
 
-  onGameFlowPhase (msg) {
+  async onGameFlowPhase (msg) {
     log(`gameflow-phase: ${msg.eventType} ${msg.data}`)
     if (msg.data === 'ReadyCheck') {
-      this.acceptMatch()
+      await this.acceptMatch()
+      return
+    }
+    if (msg.data === 'ChampSelect') {
+      // let info
+      // do {
+      //   await delay(this.interval)
+      //   info = await this.getSummonersInfo()
+      // } while (info.summonerIds && info.summonerIds.length !== 5)
+
+      // log(info)
     }
   }
 
-  async onChampSelect (msg) {
-    if (msg.eventType !== 'Update') return
+  async getSummonersInfo () {
+    try {
+      const conversations = await this.getConversations()
+      let conversationId
+      for (const conv of conversations) {
+        if (conv.type === 'championSelect') {
+          conversationId = conv.id
+          break
+        }
+      }
+      log(conversations)
+  
+      const messages = await this.getConversationMessages(conversationId)
+      const summonerIds = []
+      for (const msg of messages) {
+        if (msg.type === 'system' && msg.body === 'joined_room') {
+          summonerIds.push(msg.fromSummonerId)
+        }
+      }
+    } catch (err) {
+      console.error(err.response.body)
+      return {
+        conversationId: '',
+        summonerIds: []
+      }
+    }
+
+    return {
+      conversationId,
+      summonerIds
+    }
+  }
+
+  getGameFlowSession () {
+    return this.app.get('lol-gameflow/v1/session').json()
+  }
+
+  getConversations () {
+    return this.app.get('lol-chat/v1/conversations').json()
+  }
+
+  getConversationMessages (conversationId) {
+    return this.app.get(`lol-chat/v1/conversations/${conversationId}/messages`).json()
+  }
+
+  async tryGetChampions () {
     if (this.champions.size === 0) {
       const ownedChampions = await this.getAllGridChampions()
       console.log(ownedChampions.length)
@@ -57,6 +119,11 @@ class LeagueClient extends Client {
         this.champions.set(champ.name, champ)
       }
     }
+  }
+
+  async onChampSelect (msg) {
+    if (msg.eventType !== 'Update') return
+    await this.tryGetChampions()
     for (const actions of msg.data.actions) {
       for (const action of actions) {
         if (action.actorCellId === msg.data.localPlayerCellId && action.isInProgress) {

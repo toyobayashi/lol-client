@@ -23,16 +23,13 @@ class LeagueClient extends Client {
   }
 
   async onConnect () {
+    try {
+      await this.tryConnectWebSocket()
+    } catch (_) {
+      return this.onConnect()
+    }
     log('connect')
     log(this.args)
-    
-    const ownedChampions = await this.getAllGridChampions()
-    for (const champ of ownedChampions) {
-      this.champions.set(champ.name, champ)
-    }
-
-    await this.tryConnectWebSocket()
-    log('ws connected')
     this.ws.on('/lol-gameflow/v1/gameflow-phase', this.onGameFlowPhase.bind(this))
     this.ws.on('/lol-champ-select/v1/session', this.onChampSelect.bind(this))
     // this.currentSummoner = await this.getCurrentSummoner()
@@ -51,8 +48,15 @@ class LeagueClient extends Client {
     }
   }
 
-  onChampSelect (msg) {
+  async onChampSelect (msg) {
     if (msg.eventType !== 'Update') return
+    if (this.champions.size === 0) {
+      const ownedChampions = await this.getAllGridChampions()
+      console.log(ownedChampions.length)
+      for (const champ of ownedChampions) {
+        this.champions.set(champ.name, champ)
+      }
+    }
     for (const actions of msg.data.actions) {
       for (const action of actions) {
         if (action.actorCellId === msg.data.localPlayerCellId && action.isInProgress) {

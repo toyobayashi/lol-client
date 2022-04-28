@@ -200,10 +200,13 @@ class Client extends EventEmitter {
         this.args = undefined
         this.riot = undefined
         this.app = undefined
-        try {
-          this._ws.close()
-        } catch (_) {}
-        this._ws = undefined
+        if (this._ws) {
+          try {
+            this._ws.close()
+          } catch (_) {}
+          this._ws.removeAllListeners()
+          this._ws = undefined
+        }
         this.connected = false
         this.emit('disconnect')
         this._tick()
